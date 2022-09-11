@@ -1,5 +1,5 @@
 import React from "react";
-import { useHistory, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import ListItem from "@material-ui/core/ListItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
@@ -49,7 +49,7 @@ const secondaryListItems = [
 ];
 
 function Menu() {
-  const history = useHistory();
+  const navigate = useNavigate();
   const location = useLocation();
 
   return (
@@ -61,7 +61,7 @@ function Menu() {
             key={item.route}
             button
             selected={location.pathname === item.route}
-            onClick={() => history.push(item.route)}
+            onClick={() => navigate(item.route)}
           >
             <ListItemIcon>{item.icon}</ListItemIcon>
             <ListItemText primary={item.text} />
@@ -75,7 +75,7 @@ function Menu() {
             key={item.route}
             button
             selected={location.pathname === item.route}
-            onClick={() => history.push(item.route)}
+            onClick={() => navigate(item.route)}
           >
             <ListItemIcon>{item.icon}</ListItemIcon>
             <ListItemText primary={item.text} />

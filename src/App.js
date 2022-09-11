@@ -1,6 +1,12 @@
 import React from "react";
 import { useSelector } from "react-redux";
-import { Switch, BrowserRouter, Route, Redirect } from "react-router-dom";
+import {
+  Routes,
+  BrowserRouter,
+  Route,
+  Navigate,
+  Outlet,
+} from "react-router-dom";
 import { makeStyles } from "@material-ui/core/styles";
 
 import Calendar from "./containers/Calendar";
@@ -26,10 +32,7 @@ const useStyles = makeStyles(() => ({
 
 function PrivateRoute(props) {
   const { user } = useSelector((state) => state.session);
-  if (!user) {
-    return <Redirect to="/" />;
-  }
-  return <Route {...props} />;
+  return user ? <Outlet /> : <Navigate to="/login" />;
 }
 
 function App() {
@@ -39,13 +42,15 @@ function App() {
       <div className={classes.root}>
         <TopBar />
         <main className={classes.content}>
-          <Switch>
-            <Route exact path="/" component={Calendar} />
-            <PrivateRoute path="/settings" component={Settings} />
-            <PrivateRoute path="/resources" component={Resources} />
-            <PrivateRoute path="/custom-fields" component={CustomFields} />
-            <PrivateRoute path="/users" component={Users} />
-          </Switch>
+          <Routes>
+            <Route exact path="/" element={<Calendar />} />
+            <Route element={<PrivateRoute />}>
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/resources" element={<Resources />} />
+              <Route path="/custom-fields" element={<CustomFields />} />
+              <Route path="/users" element={<Users />} />
+            </Route>
+          </Routes>
         </main>
       </div>
     </BrowserRouter>

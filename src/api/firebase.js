@@ -1,88 +1,88 @@
 import firebase from "../firebase";
+import {
+  createUserWithEmailAndPassword,
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+} from "firebase/auth";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  doc,
+  updateDoc,
+  deleteDoc,
+  query,
+  orderBy,
+  getDoc,
+  setDoc,
+} from "firebase/firestore";
 
-const auth = firebase.auth();
-const dbResources = firebase.firestore().collection("spaces");
-const dbEvents = firebase.firestore().collection("events");
-const dbSettings = firebase.firestore().collection("settings");
-const dbFields = firebase.firestore().collection("customFields");
-const dbRoles = firebase.firestore().collection("roles");
-const dbUsers = firebase.firestore().collection("users");
-
-const db = {
-  resources: dbResources,
-  events: dbEvents,
-  settings: dbSettings,
-  customFields: dbFields,
-  roles: dbRoles,
-  users: dbUsers,
-};
+const auth = getAuth(firebase);
+const firestore = getFirestore(firebase);
 
 // Creators
 function getAll(type) {
-  if (!db[type]) {
+  const db = collection(firestore, type);
+  if (!db) {
     throw new Error(`db ${type} doesn't exist`);
   }
-  return function () {
-    return db[type].get().then((collection) => {
-      const docs = [];
-      collection.forEach((doc) => docs.push({ id: doc.id, ...doc.data() }));
-      return docs;
-    });
+  return async function () {
+    const entities = await getDocs(db);
+    const docs = [];
+    entities.docs.forEach((doc) => docs.push({ id: doc.id, ...doc.data() }));
+    return docs;
   };
 }
 
-// function get(type) {
-//   if (!db[type]) {
-//     throw new Error(`db ${type} doesn't exist`);
-//   }
-//   return function (id) {
-//     return db[type].doc(id).get();
-//   };
-// }
-
 function create(type) {
-  if (!db[type]) {
+  const db = collection(firestore, type);
+  if (!db) {
     throw new Error(`db ${type} doesn't exist`);
   }
   return function (entity) {
-    return db[type].add(entity).then((docRef) => docRef.id);
+    return addDoc(db, entity);
   };
 }
 
 function update(type) {
-  if (!db[type]) {
+  const db = collection(firestore, type);
+  if (!db) {
     throw new Error(`db ${type} doesn't exist`);
   }
   return function (id, entity) {
-    return db[type].doc(id).set(entity);
+    return updateDoc(doc(firestore, type, id), entity);
   };
 }
 
 function remove(type) {
-  if (!db[type]) {
+  const db = collection(firestore, type);
+  if (!db) {
     throw new Error(`db ${type} doesn't exist`);
   }
   return function (id) {
-    return db[type].doc(id).delete();
+    return deleteDoc(doc(firestore, type, id));
   };
 }
 
 // Session
 export function logIn(email, password) {
-  return auth.signInWithEmailAndPassword(email, password);
+  return signInWithEmailAndPassword(auth, email, password);
 }
 
 export function logOut() {
-  return auth.signOut();
+  return signOut(auth);
 }
 
 export function getCurrentSession() {
-  return new Promise((res) => auth.onAuthStateChanged(res));
+  return new Promise((res) => onAuthStateChanged(auth, res));
 }
 
 // User
 export function createUser(email, password) {
-  return auth.createUserWithEmailAndPassword(email, password);
+  return createUserWithEmailAndPassword(auth, email, password);
 }
 
 export const getUsers = getAll("users");
@@ -96,15 +96,13 @@ export const updateEvent = update("events");
 export const deleteEvent = remove("events");
 
 // Resource
-export function getResources() {
-  return dbResources
-    .orderBy("order")
-    .get()
-    .then((collection) => {
-      const docs = [];
-      collection.forEach((doc) => docs.push({ id: doc.id, ...doc.data() }));
-      return docs;
-    });
+export async function getResources() {
+  const entities = await getDocs(
+    query(collection(firestore, "spaces"), orderBy("order"))
+  );
+  const docs = [];
+  entities.docs.forEach((doc) => docs.push({ id: doc.id, ...doc.data() }));
+  return docs;
 }
 
 export const createResource = create("resources");
@@ -125,12 +123,9 @@ export const deleteRole = remove("roles");
 
 // Setting
 export function getSettings() {
-  return dbSettings
-    .doc("general")
-    .get()
-    .then((doc) => doc.data());
+  return getDoc(doc(firestore, "settings", "general"));
 }
 
 export function setSettings(values) {
-  return dbSettings.doc("general").set(values);
+  return setDoc(doc(firestore, "settings", "general"), values);
 }

@@ -1,9 +1,10 @@
 import React from "react";
 import { Formik, Form } from "formik";
-import { DatePicker, TimePicker } from "@material-ui/pickers";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { makeStyles } from "@material-ui/core/styles";
 import { useSelector, useDispatch } from "react-redux";
 
+import Checkbox from "@material-ui/core/Checkbox";
 import Button from "@material-ui/core/Button";
 import Dialog from "@material-ui/core/Dialog";
 import TextField from "@material-ui/core/TextField";
@@ -20,7 +21,7 @@ import IconButton from "@material-ui/core/IconButton";
 import DeleteIcon from "@material-ui/icons/Delete";
 
 import { actions } from "../store";
-import Checkbox from "@material-ui/core/Checkbox";
+import { TimePicker } from "@mui/x-date-pickers";
 
 const useStyles = makeStyles((theme) => ({
   appBar: {
@@ -101,6 +102,9 @@ function DialogEvent(props) {
           if (!values.name) {
             errors.name = "Name is required";
           }
+          if (values.endDate < values.startDate) {
+            errors.endDate = "End date should be after start date";
+          }
           return errors;
         }}
         onSubmit={saveEvent}
@@ -112,6 +116,7 @@ function DialogEvent(props) {
           handleBlur,
           isSubmitting,
           setFieldValue,
+          errors,
         }) => (
           <Form className={classes.form}>
             <DialogContent className={classes.content}>
@@ -123,78 +128,65 @@ function DialogEvent(props) {
                     name="name"
                     label="Event name"
                     onChange={handleChange}
-                    onBlur={handleBlur}
                     value={values.name}
                     fullWidth
                     autoComplete="off"
                     autoFocus
+                    error={!!errors.name}
+                    helperText={errors.name}
                   />
                 </Grid>
-                <Grid item xs={values.allDay ? 6 : 3}>
+                <Grid item xs={values.allDay ? 12 : 6}>
                   <DatePicker
-                    autoOk
-                    id="startDate"
-                    name="startDate"
-                    className={classes.arrows}
-                    variant="inline"
                     label="Start date"
-                    disableToolbar
                     value={values.startDate}
-                    onChange={(date) =>
-                      setFieldValue("startDate", date.getTime())
+                    onChange={(newValue) =>
+                      setFieldValue("startDate", newValue)
                     }
-                    onBlur={handleBlur}
-                    fullWidth
+                    renderInput={(params) => <TextField {...params} />}
+                    inputFormat="dd MMM Y"
+                    disableMaskedInput
                   />
                 </Grid>
                 {!values.allDay && (
-                  <Grid item xs={3}>
+                  <Grid item xs={6}>
                     <TimePicker
-                      autoOk
-                      id="startTime"
-                      name="startTime"
-                      label=" "
-                      className={classes.arrows}
-                      variant="inline"
+                      label="&nbsp;"
                       value={values.startDate}
-                      onChange={(time) =>
-                        setFieldValue("startDate", time.getTime())
+                      onChange={(value) =>
+                        setFieldValue("startDate", value.getTime())
                       }
-                      onBlur={handleBlur}
+                      renderInput={(params) => <TextField {...params} />}
                     />
                   </Grid>
                 )}
-                <Grid item xs={values.allDay ? 6 : 3}>
+                <Grid item xs={values.allDay ? 12 : 6}>
                   <DatePicker
-                    autoOk
-                    id="endDate"
-                    name="endDate"
-                    className={classes.arrows}
-                    variant="inline"
                     label="End date"
-                    disableToolbar
                     value={values.endDate}
-                    onChange={(date) =>
-                      setFieldValue("endDate", date.getTime())
-                    }
-                    onBlur={handleBlur}
-                    fullWidth
+                    onChange={(newValue) => setFieldValue("endDate", newValue)}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        error={!!errors.endDate}
+                        helperText={errors.endDate}
+                      />
+                    )}
+                    inputFormat="dd MMMM Y"
+                    disableMaskedInput
                   />
                 </Grid>
                 {!values.allDay && (
-                  <Grid item xs={3}>
+                  <Grid item xs={6}>
                     <TimePicker
-                      autoOk
-                      id="endTime"
-                      name="endTime"
-                      label=" "
-                      className={classes.arrows}
-                      variant="inline"
+                      label="&nbsp;"
                       value={values.endDate}
-                      onChange={(time) =>
-                        setFieldValue("endDate", time.getTime())
+                      onChange={(value) =>
+                        setFieldValue("endDate", value.getTime())
                       }
-                      onBlur={handleBlur}
+                      renderInput={(params) => (
+                        <TextField {...params} error={!!errors.endDate} />
+                      )}
                     />
                   </Grid>
                 )}
@@ -221,7 +213,6 @@ function DialogEvent(props) {
                     name="resource"
                     labelId="resource-label"
                     onChange={handleChange}
-                    onBlur={handleBlur}
                     value={values.resource || ""}
                     fullWidth
                   >
